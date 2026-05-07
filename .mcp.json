@@ -1,7 +1,7 @@
 {
   "mcpServers": {
     "TrendyolDeveloperToolsMcpServer": {
-      "url": "http://localhost:3000/sse"
+      "url": "https://apigw.trendyol.com/trendyol-developer-tools-mcp-server/sse"
     }
   }
 }

@@ -111,5 +111,5 @@ hooks/
 skills/
   trendyol-integration-developer-tool/
     SKILL.md           — specialist system prompt + workflow rules
-.mcp.json              — MCP server connection (localhost:3000)
+.mcp.json              — MCP server connection (https://apigw.trendyol.com/trendyol-developer-tools-mcp-server/sse)
 ```
