@@ -1,0 +1,14 @@
+{
+        "name": "trendyol",
+        "owner": {
+          "name": "Trendyol"
+        },
+        "plugins": [
+          {
+            "name": "trendyol-integration-developer-tool",
+            "source": ".",
+            "description": "Trendyol Marketplace Product Integration — API exploration, integration planning, payload generation, validation, and implementation guidance using the Trendyol Developer Tools MCP."
+          }
+        ]
+      }
+      

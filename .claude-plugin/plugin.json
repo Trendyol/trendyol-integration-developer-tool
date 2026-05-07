@@ -1,0 +1,8 @@
+{
+  "name": "trendyol-integration-developer-tool",
+  "description": "Trendyol Marketplace Product Integration — developer tools assistant for Claude Code. Provides API exploration, integration planning, payload generation, validation, and implementation guidance using the Trendyol Developer Tools MCP.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Trendyol"
+  }
+}
