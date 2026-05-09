@@ -1,0 +1,27 @@
+{
+  "name": "trendyol-integration-developer-tool",
+  "version": "1.0.0",
+  "description": "Developer tool for Trendyol Marketplace Product Integration APIs (TR, V2, International). Endpoint discovery, integration planning, payload validation, curl generation, test fixtures, and async batch tracking via MCP server.",
+  "author": {
+    "name": "Trendyol",
+    "url": "https://developers.trendyol.com"
+  },
+  "homepage": "https://github.com/trendyol/trendyol-integration-developer-tool",
+  "repository": "https://github.com/trendyol/trendyol-integration-developer-tool",
+  "license": "Apache-2.0",
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Trendyol Integration Developer Tool",
+    "shortDescription": "Expert guidance for Trendyol Marketplace seller product integrations",
+    "longDescription": "Plan, validate, and implement Trendyol Marketplace Product Integration APIs. Covers catalog lookup, product onboarding, inventory & price sync, product update, lifecycle management, and async batch tracking. Supports TR and International marketplaces. Grounded in a live MCP server — never relies on training data for API contracts.",
+    "developerName": "Trendyol",
+    "category": "Ecommerce",
+    "capabilities": [
+      "Read"
+    ],
+    "websiteURL": "https://developers.trendyol.com",
+    "privacyPolicyURL": "https://www.trendyol.com/gizlilik-politikasi",
+    "termsOfServiceURL": "https://developers.trendyol.com/docs/marketplace-entegrasyon-bilgileri/basvuru-ve-izinler"
+  }
+}

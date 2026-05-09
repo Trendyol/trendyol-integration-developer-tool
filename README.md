@@ -6,9 +6,9 @@ A Claude Code plugin that provides expert guidance for implementing Trendyol Mar
 
 ---
 
-## API Scope
+## API Scope (Phase 1)
 
-This plugin covers the following Trendyol Marketplace API domains only:
+This release covers the following Trendyol Marketplace API domains:
 
 - **Trendyol Marketplace — Product Integration API (TR)**
 - **Trendyol Marketplace — Product Integration V2 API (TR)**
@@ -16,7 +16,7 @@ This plugin covers the following Trendyol Marketplace API domains only:
 
 Reference: https://developers.trendyol.com/reference/getbrands
 
-Other Trendyol API domains (Orders, Shipments, Finance, Claims, etc.) are out of scope.
+Additional API domains (Orders, Shipments, Finance, Claims, etc.) are planned for future phases.
 
 ---
 
@@ -50,11 +50,33 @@ The `.mcp.json` in this plugin configures the connection automatically. No local
 
 ## Installation
 
+### Claude Code
+
 ```bash
 /plugin marketplace add trendyol/trendyol-integration-developer-tool
 /plugin install trendyol-integration-developer-tool@trendyol
 /reload-plugins
 ```
+
+### Codex
+
+```bash
+codex plugin marketplace add trendyol/trendyol-integration-developer-tool
+```
+
+Then launch Codex and run `/plugins` to browse and install the **trendyol-integration-developer-tool** plugin.
+
+---
+
+## Project Setup (Recommended)
+
+For best results, add a `CLAUDE.md` to your integration project root. This gives Claude Code Trendyol-specific rules (MCP-first, stage-before-production, async awareness) in the context of your own project — not just inside this plugin.
+
+```bash
+curl -o CLAUDE.md https://raw.githubusercontent.com/trendyol/trendyol-integration-developer-tool/main/CLAUDE.md
+```
+
+Or copy it manually from this repository. The file is safe to commit alongside your project.
 
 ---
 
@@ -120,6 +142,12 @@ Stage calls (`https://stageapigw.trendyol.com`) are never blocked. All generated
 ## Marketplace Support
 
 Both TR and GLOBAL marketplace integrations are supported. The `marketplace` parameter on `validateRequest` and `validatePayload` controls marketplace-specific validation:
+
+- **TR**: vatRate enforced as one of `[0, 1, 10, 20]`
+- **GLOBAL**: vatRate not enum-enforced (country-specific rates apply)
+- **TR**: storefrontCode is always `"1"`
+- **GLOBAL**: storefrontCode is a seller-provided country code (e.g. `"SA"`, `"RO"`)
+
 ---
 
 ## Example Use Cases
