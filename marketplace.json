@@ -1,14 +1,28 @@
 {
-        "name": "trendyol",
-        "owner": {
-          "name": "Trendyol"
-        },
-        "plugins": [
-          {
-            "name": "trendyol-integration-developer-tool",
-            "source": ".",
-            "description": "Trendyol Marketplace Product Integration — API exploration, integration planning, payload generation, validation, and implementation guidance using the Trendyol Developer Tools MCP."
-          }
-        ]
-      }
-      
+  "metadata": {
+    "description": "Official Trendyol plugin marketplace for developer and seller integrations.",
+    "version": "1.0.0"
+  },
+  "name": "trendyol",
+  "owner": {
+    "name": "Trendyol"
+  },
+  "plugins": [
+    {
+      "name": "trendyol-integration-developer-tool",
+      "source": ".",
+      "version": "1.0.0",
+      "category": "ecommerce",
+      "keywords": [
+        "trendyol",
+        "marketplace",
+        "ecommerce",
+        "product-integration",
+        "seller",
+        "api",
+        "validation"
+      ],
+      "description": "Trendyol Marketplace Product Integration — API exploration, integration planning, payload generation, validation, and implementation guidance using the Trendyol Developer Tools MCP."
+    }
+  ]
+}
