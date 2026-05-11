@@ -37,5 +37,5 @@ This release covers the Trendyol Marketplace Product Integration API family:
 | Channel | Expected Response |
 |---|---|
 | GitHub Issues | 2–5 business days |
-| Security reports (security@trendyol.com) | 48 hours acknowledgement, 7 business days resolution |
+| Security reports (appsec@trendyol.com) | 48 hours acknowledgement, 7 business days resolution |
 | Trendyol Developer Support | Per Trendyol SLA |

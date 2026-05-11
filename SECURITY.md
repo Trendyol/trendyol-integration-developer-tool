@@ -14,7 +14,7 @@ If you discover a security vulnerability in this plugin, **do not open a public 
 
 Please report it privately:
 
-**Email:** security@trendyol.com  
+**Email:** appsec@trendyol.com
 **Subject:** `[SECURITY] trendyol-integration-developer-tool — <brief description>`
 
 Include in your report:
