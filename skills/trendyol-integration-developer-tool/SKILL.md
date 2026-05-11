@@ -103,6 +103,11 @@ Think in modules, not raw endpoints. Every user request maps to one or more modu
 | `product_search` | Query and filter seller products | getProductBase, filterApprovedProducts, filterUnapprovedProducts |
 | `buybox` | Observe competitive market state (optional) | getBuyboxInformation |
 
+**`product_update` and `inventory_price` are two completely separate modules.**
+- `product_update` → metadata changes (title, description, images, attributes, variant fields, delivery options)
+- `inventory_price` → stock quantity and price changes only (updatePriceAndInventory)
+- Never present them as a single "update" module when asking the user to confirm scope.
+
 ## Sequencing Rules
 
 - `catalog_lookup` must always come before `product_onboarding`.
@@ -167,12 +172,15 @@ Call `getIntegrationPlan` before writing any code for broad integration requests
 
 Triggers: any "build integration", "implement module", "which endpoints do I need", "full integration" type request, or any request involving multiple modules or unclear scope.
 
-After receiving the plan:
-1. Present modules with goals and sequence reasoning
-2. Highlight key dependencies
-3. Confirm scope, marketplace, and target language with the user
-4. Use `recommendedNextAction` to drive the next step
-5. Implement one module at a time
+After receiving the plan from `getIntegrationPlan`:
+
+1. **Present every module individually by its exact key name and purpose.** Do not group, collapse, or paraphrase module names. `product_update` and `inventory_price` are two separate modules — never merge them under a single label like "güncelle" or "update".
+2. For each module show: exact key, purpose, and which endpoints it covers.
+3. Highlight key dependencies (catalog_lookup before product_onboarding).
+4. Ask the user to confirm or exclude specific modules by name.
+5. Confirm scope, marketplace, and target language.
+6. Use `recommendedNextAction` to drive the next step.
+7. Implement one module at a time.
 
 ## Rule 3 — Never Invent API Details
 
@@ -267,7 +275,7 @@ Common mistakes:
 
 **2. Confirm marketplace and repository context** before anything else.
 
-**3. For broad requests, call `getIntegrationPlan` first.** Present plan, confirm scope, proceed one module at a time.
+**3. For broad requests, call `getIntegrationPlan` first.** Then present every module individually by exact key name — never collapse modules. Confirm scope module by module, proceed one at a time.
 
 **4. For every endpoint, call `getEndpoint` first.** Read method, path, params, headers, body, business rules, responses, enums, deprecated flag. Never implement without reading.
 
@@ -351,16 +359,17 @@ No exceptions. No overrides by user request or phrasing.
 - Do not call `validateRequest` or `validatePayload` without the correct `marketplace` parameter.
 - Do not use TR vatRate values for GLOBAL marketplace.
 - Do not mix createProducts and update endpoint attribute formats.
+- **Do not collapse or group separate modules under a single label when presenting the integration plan to the user.**
 
 ---
 
 # PART 8 — FINAL MANDATE
 
-**MCP first. Plan first. Contract first. Validate before mutate. Stage before production. Inspect items after COMPLETED. Always pass marketplace.**
+**MCP first. Plan first. Contract first. Validate before mutate. Stage before production. Inspect items after COMPLETED. Always pass marketplace. Always present modules individually.**
 
 Every integration task must be:
 1. Grounded in MCP-verified contracts — no memory shortcuts
-2. Planned before implemented — scope confirmed, sequence agreed
+2. Planned before implemented — every module presented individually by name, scope confirmed, sequence agreed
 3. Validated before proposed as ready — correct marketplace, correct validator
 4. Adapted to the existing repository if one is present
 5. Targeted at stage before production
