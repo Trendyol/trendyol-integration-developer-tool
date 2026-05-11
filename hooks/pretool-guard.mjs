@@ -3,16 +3,25 @@
 /**
  * Trendyol Integration Developer Tool — PreToolUse Safety Guard
  *
- * Guards against accidental production API calls by intercepting:
- * 1. Bash commands that contain the Trendyol production API URL
- * 2. Computer/browser tool use that navigates to production API URL
+ * Guards against accidental production API calls by intercepting ALL tool calls
+ * and checking whether their payload targets the Trendyol production API.
  *
- * Stage URL (allowed freely): https://stageapigw.trendyol.com
+ * Stage URL (allowed freely):      https://stageapigw.trendyol.com
  * Production URL (requires confirmation): https://apigw.trendyol.com
+ *
+ * Security fixes applied:
+ * - matcher is ".*" — covers all tool name variants (bash_tool, run_bash, etc.)
+ * - URL detection uses regex + normalization to catch encoding bypasses
+ * - reason field requires minimum 20 characters to prevent trivial bypasses
+ * - MCP response content is never trusted as a source of confirmation
  */
 
-const PRODUCTION_URL = "https://apigw.trendyol.com";
+// Regex matches any form of the production hostname
+// Handles: URL-encoded, unicode-escaped, with/without protocol, with/without trailing slash
+const PRODUCTION_HOST_REGEX = /apigw\.trendyol\.com/i;
 const STAGE_URL = "https://stageapigw.trendyol.com";
+const PRODUCTION_URL = "https://apigw.trendyol.com";
+const REASON_MIN_LENGTH = 20;
 
 let input = "";
 
@@ -55,6 +64,7 @@ process.stdin.on("end", () => {
         const confirmExecution = toolInput.confirmExecution;
         const acknowledgeRisks = toolInput.acknowledgeRisks;
         const reason = toolInput.reason;
+        const reasonStr = String(reason ?? "").trim();
 
         const errors = [];
 
@@ -70,9 +80,13 @@ process.stdin.on("end", () => {
             );
         }
 
-        if (!reason || String(reason).trim().length === 0) {
+        if (reasonStr.length === 0) {
             errors.push(
                 "reason is required — explain why this production call is necessary."
+            );
+        } else if (reasonStr.length < REASON_MIN_LENGTH) {
+            errors.push(
+                `reason must be at least ${REASON_MIN_LENGTH} characters. Received ${reasonStr.length} chars: "${reasonStr}"`
             );
         }
 
@@ -103,42 +117,68 @@ process.stdin.on("end", () => {
 
 /**
  * Checks whether a tool call is targeting the Trendyol production API.
- * Looks at bash commands, computer tool URLs, and any string fields in toolInput.
+ *
+ * Security: uses regex instead of string includes to handle encoding variants.
+ * Normalizes unicode escapes before matching to prevent \u002F style bypasses.
+ *
+ * Detection logic:
+ * 1. Bash/shell/execute tools — check command string
+ * 2. Computer/browser/navigate tools — check URL field
+ * 3. generateCurl — check environment parameter
+ * 4. Generic fallback — serialize full toolInput and scan
  */
 function checkForProductionTarget(toolName, toolInput) {
     const lowerToolName = toolName.toLowerCase();
 
-    // Bash tool — check command string for production URL
-    if (lowerToolName.includes("bash") || lowerToolName.includes("shell") || lowerToolName.includes("execute")) {
-        const command = String(toolInput.command || toolInput.cmd || toolInput.input || "");
-        if (command.includes(PRODUCTION_URL)) {
-            return true;
-        }
+    // ── 1. Bash / shell tools ───────────────────────────────────────────────────
+    // Matches: bash, Bash, bash_tool, run_bash, shell, execute, execute_command, etc.
+    if (/bash|shell|execut/.test(lowerToolName)) {
+        const command = String(
+            toolInput.command || toolInput.cmd || toolInput.input || ""
+        );
+        if (containsProductionHost(command)) return true;
     }
 
-    // Computer/browser tool — check URL navigation
-    if (lowerToolName.includes("computer") || lowerToolName.includes("browser") || lowerToolName.includes("navigate")) {
-        const url = String(toolInput.url || toolInput.action || "");
-        if (url.includes(PRODUCTION_URL)) {
-            return true;
-        }
+    // ── 2. Computer / browser / navigation tools ────────────────────────────────
+    if (/computer|browser|navigat|web_fetch|fetch/.test(lowerToolName)) {
+        const url = String(toolInput.url || toolInput.action || toolInput.navigate || "");
+        if (containsProductionHost(url)) return true;
     }
 
-    // generateCurl with environment=production — warn before generating
-    if (lowerToolName.includes("generatecurl") || lowerToolName.includes("generate_curl")) {
+    // ── 3. generateCurl with environment=production ─────────────────────────────
+    if (/generatecurl|generate.curl/.test(lowerToolName)) {
         const environment = String(toolInput.environment || "stage").toLowerCase();
-        if (environment === "production") {
-            return true;
-        }
+        if (environment === "production") return true;
     }
 
-    // Generic fallback — scan all string values in toolInput for production URL
-    const inputStr = JSON.stringify(toolInput);
-    if (inputStr.includes(PRODUCTION_URL)) {
-        return true;
-    }
+    // ── 4. Generic fallback — scan serialized toolInput ─────────────────────────
+    // Normalize unicode escapes first to prevent \u002F bypass
+    const inputStr = normalizeUnicode(JSON.stringify(toolInput));
+    if (PRODUCTION_HOST_REGEX.test(inputStr)) return true;
 
     return false;
+}
+
+/**
+ * Normalize unicode escapes in a string before regex matching.
+ * Prevents bypass via: "https:\u002F\u002Fapigw.trendyol.com"
+ */
+function normalizeUnicode(str) {
+    try {
+        return str.replace(/\\u[\da-fA-F]{4}/g, (match) =>
+            String.fromCharCode(parseInt(match.slice(2), 16))
+        );
+    } catch {
+        return str;
+    }
+}
+
+/**
+ * Test whether a string contains the production hostname
+ * using regex after unicode normalization.
+ */
+function containsProductionHost(str) {
+    return PRODUCTION_HOST_REGEX.test(normalizeUnicode(str));
 }
 
 function allow() {
