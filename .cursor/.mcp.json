@@ -1,0 +1,8 @@
+{
+    "mcpServers": {
+      "TrendyolDeveloperToolsMcpServer": {
+        "type": "http",
+        "url": "https://apigw.trendyol.com/trendyol-developer-tools-mcp-server/sse"
+      }
+    }
+  }

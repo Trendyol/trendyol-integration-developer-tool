@@ -1,0 +1,69 @@
+---
+description: Use when validating a Trendyol API payload, interpreting validation errors or warnings, fixing a rejected request, or deciding which validator to call. Covers validateRequest, validatePayload, validateProductAgainstCategoryAttributes.
+alwaysApply: false
+---
+
+# Trendyol Validation Reference
+
+## Which Validator to Call
+
+| Situation | Tool |
+|---|---|
+| Full request (params + headers + body) | `validateRequest(endpointKey, marketplace, pathParams, queryParams, headers, body)` |
+| Body only | `validatePayload(endpointKey, payload, marketplace)` |
+| Product attributes vs category | `validateProductAgainstCategoryAttributes(categoryAttributesResponse, productItems)` |
+
+Always prefer `validateRequest`. Always pass `marketplace` explicitly.
+
+For createProducts or updateUnapprovedProducts — both validators required:
+1. `validateRequest`
+2. `validateProductAgainstCategoryAttributes`
+
+If user doesn't have getCategoryAttributes response yet: _"Please call getCategoryAttributes({categoryId: YOUR_ID}) first so I can validate attributes."_
+
+## Error Codes
+
+| Code | Fix |
+|---|---|
+| `MISSING_REQUIRED_FIELD` | Add the missing field |
+| `INVALID_VAT_RATE` | TR: 0, 1, 10, or 20. GLOBAL: country-specific |
+| `INVALID_PRICE_RELATION` | listPrice must be >= salePrice |
+| `DUPLICATE_BARCODES` | Remove duplicate barcodes |
+| `DUPLICATE_CONTENT_IDS` | Remove duplicate contentIds |
+| `INVALID_AUTHORIZATION_FORMAT` | Use "Basic base64(apiKey:apiSecret)" |
+| `INVALID_SUPPLIER_ID_FORMAT` | X-Supplier-Id must be numeric string |
+| `NO_MUTABLE_FIELD` | updatePriceAndInventory needs quantity, salePrice, or listPrice |
+| `QUANTITY_EXCEEDS_LIMIT` | Max 20000 units per product |
+| `EMPTY_ITEMS_ARRAY` | Add at least one item |
+| `MISSING_REQUIRED_PATH_PARAM` | Add path parameter |
+| `INVALID_DELIVERY_DURATION` | deliveryDuration must be 1 when fastDeliveryType is set |
+
+## Warning Codes
+
+| Code | Action |
+|---|---|
+| `IMAGE_URL_NOT_HTTPS` | Change to HTTPS |
+| `WRONG_ATTRIBUTE_FORMAT_FOR_CREATE` | Use `attributeValueId` (singular) + `customAttributeValue` for createProducts |
+| `WRONG_ATTRIBUTE_FORMAT_FOR_UPDATE` | Use `attributeValueIds` (array) + `attributeValue` for update endpoints |
+| `ATTRIBUTES_FULL_SEND_REQUIRED` | Send ALL attributes when any attribute is updated in updateApprovedProductContent |
+| `MISSING_VARIANTER_ATTRIBUTE` | Add for correct variant grouping |
+| `MISSING_SLICER_ATTRIBUTE` | Add for correct catalog card separation |
+| `PAGE_SIZE_PRODUCT_EXCEEDS_LIMIT` | page × size must not exceed 10000 |
+| `MISSING_CREDENTIAL_HEADER` | Add Authorization and X-Supplier-Id before real execution |
+
+## validateProductAgainstCategoryAttributes Errors
+
+| Code | Fix |
+|---|---|
+| `MISSING_REQUIRED_ATTRIBUTE` | Add the required attribute with a value |
+| `REQUIRED_ATTRIBUTE_VALUE_MISSING` | Provide attributeValueIds or attributeValue |
+| `CUSTOM_VALUE_NOT_ALLOWED` | allowCustom=false — use predefined IDs from getCategoryAttributeValues |
+| `MULTIPLE_VALUES_NOT_ALLOWED` | allowMultipleAttributeValues=false — send only one ID |
+| `UNKNOWN_ATTRIBUTE` | attributeId not in category — verify getCategoryAttributes |
+
+## Presenting Results
+
+- **Errors** (blocking): explain what is wrong, what was received, exactly how to fix
+- **Warnings** (non-blocking): explain and let user decide
+- Never say payload is "ready" when errors exist
+- No errors: "Schema validation passed."

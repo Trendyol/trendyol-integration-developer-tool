@@ -1,0 +1,31 @@
+---
+description: Core Trendyol integration mandates. Always active.
+alwaysApply: true
+---
+
+# Trendyol Integration — Core
+
+## MCP First
+Never use training data for Trendyol API details. Use `TrendyolDeveloperToolsMcpServer`.
+- `getEndpoint(endpointKey)` before any code or curl
+- `getIntegrationPlan` before broad integration requests
+- `searchEndpoints(query)` when endpoint key is unknown
+
+## Validation Before Mutation
+- `validateRequest(endpointKey, marketplace)` before any mutation is "ready"
+- createProducts / updateUnapprovedProducts: also call `validateProductAgainstCategoryAttributes`
+- Always pass `marketplace: "TR"` or `"GLOBAL"` explicitly
+
+## Async Awareness
+Every mutation returns `batchRequestId` — HTTP 200 ≠ success.
+- Poll `getBatchRequestResult` → inspect `items[].status`
+- COMPLETED ≠ all items succeeded
+- Store results within 4 hours
+
+## Stage First
+- Stage: `https://stageapigw.trendyol.com` (default)
+- Production: `https://apigw.trendyol.com` (explicit confirmation required)
+- Base URL configurable in all generated code — never hardcoded
+
+## Scope (Phase 1)
+Product Integration API (TR) · Product Integration V2 API (TR) · International Marketplace Product Integration API

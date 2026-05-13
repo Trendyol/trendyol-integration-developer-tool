@@ -1,0 +1,80 @@
+---
+description: Use when starting a broad Trendyol integration, planning which modules to implement, implementing a specific module, or adding Trendyol integration to an existing codebase. Covers plan-before-code workflow and repo-aware implementation mode.
+alwaysApply: false
+---
+
+# Trendyol Integration Workflow
+
+## Step 1: Classify the Request
+
+| Request | First Action |
+|---|---|
+| Full integration / "Trendyol entegrasyonu yap" | `getIntegrationPlan` |
+| Specific module / "product_onboarding implement et" | `getIntegrationPlan` scoped |
+| Single endpoint info | `getEndpoint(endpointKey)` |
+| Example payload | `generateExampleRequest` |
+| Curl command | `generateCurl(endpointKey, marketplace)` |
+| Implementation guide | `generateImplementationGuide(moduleKey, language)` |
+| Test data | `generateTestFixtures(endpointKey)` |
+| Batch/async help | `getBatchPollingStrategy(endpointKey)` |
+| Endpoint unknown | `searchEndpoints(query)` |
+
+## Step 2: For Broad Requests — Plan First
+
+Call `getIntegrationPlan` for: any multi-module request, "full integration", "which endpoints do I need", scope unclear.
+
+```
+getIntegrationPlan({
+  language: "kotlin",          // if specified
+  excludeModules: ["buybox"],  // buybox excluded by default
+})
+```
+
+After receiving the plan:
+1. Present every module by exact key name — never collapse or group
+2. Explain sequence and dependencies
+3. Confirm scope, marketplace, language with user
+4. Implement one module at a time using `recommendedNextAction`
+
+## Step 3: Read Endpoint Contract
+
+Call `getEndpoint(endpointKey)` before generating any code. Read: method, path, params, headers, requestBody, businessRules, responses, enums, deprecated flag, observedInconsistencies.
+
+## Step 4: Generate Examples
+
+```
+generateExampleRequest(endpointKey, includeOptionalFields=false)
+generateCurl(endpointKey, marketplace, pathParams, queryParams, body)
+generateTestFixtures(endpointKey)
+```
+
+## Step 5: Validate
+
+See `@trendyol-validation` for validator selection and error codes.
+
+## Step 6: Generate Implementation Code
+
+1. `generateImplementationGuide(moduleKey, language)` — auth, HTTP client, polling patterns
+2. Typed models from `getEndpoint` schema
+3. HTTP client code
+4. `getBatchPollingStrategy(endpointKey)` for async endpoints
+5. `generateTestFixtures` for test data
+
+## Repo-Aware Mode
+
+If existing code is present (user mentions files/classes, workspace has source files, "add to my existing service"):
+
+**Identify before generating any code:**
+- Language and version, framework, project structure
+- HTTP client in use (RestTemplate, OkHttp, axios, httpx, etc.)
+- Configuration pattern (.env, application.yml, config classes)
+- DTO conventions, naming style, error handling patterns
+- Test framework
+
+**In Repo-Aware Mode:**
+- Use existing HTTP client — never introduce a new one
+- Match naming conventions and project structure
+- Reuse existing auth and error handling abstractions
+- Add tests using existing framework
+
+**Rule: MCP determines WHAT, the repository determines HOW.**
