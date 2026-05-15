@@ -1,0 +1,70 @@
+---
+description: Use when planning a Trendyol integration, choosing which module to implement, deciding which update endpoint to use, or when asked about product_update vs inventory_price, catalog_lookup, product_onboarding, product_lifecycle, batch_tracking, product_search, or buybox modules.
+alwaysApply: false
+---
+
+# Trendyol Integration Modules
+
+## Module Map
+
+| Module | Purpose | Endpoints |
+|---|---|---|
+| `catalog_lookup` | Resolve brandId, categoryId, attributeIds before product creation | getBrands, getBrandsByName, getCategoryTree, getCategoryAttributes, getCategoryAttributeValues |
+| `product_onboarding` | Create new products via V2 API | createProducts |
+| `product_update` | Update product metadata — title, images, attributes, variant fields, delivery | updateUnapprovedProducts, updateApprovedProductContent, updateApprovedProductVariant, updateApprovedProductDelivery |
+| `inventory_price` | Update stock quantity and pricing only | updatePriceAndInventory |
+| `product_lifecycle` | Archive, unlock, delete | archiveProducts, unlockProducts, deleteProducts |
+| `batch_tracking` | Track async mutation results | getBatchRequestResult |
+| `product_search` | Query and filter seller products | getProductBase, filterApprovedProducts, filterUnapprovedProducts |
+| `buybox` | Competitive market state (optional) | getBuyboxInformation |
+
+**`product_update` and `inventory_price` are two separate modules.**
+- `product_update` → metadata only (title, images, attributes, variant fields, delivery) — never price or stock
+- `inventory_price` → stock and price only — never metadata
+
+## Module Presentation Rule
+When presenting an integration plan, list every module by exact key name and purpose. Never collapse or group modules. `product_update` and `inventory_price` must always appear as separate items.
+
+## Sequencing
+- `catalog_lookup` always before `product_onboarding`
+- `batch_tracking` required after every write
+- `product_search` is the source of `contentId` for `updateApprovedProductContent`
+- `buybox` is optional — excluded from plans by default
+
+## Choosing the Right Update Endpoint
+
+```
+Product approved?
+├─ No → updateUnapprovedProducts
+└─ Yes → What changes?
+         ├─ title/description/images/attributes → updateApprovedProductContent
+         ├─ stockCode/vatRate/dimensionalWeight/addresses/lotNumber/locationBasedDelivery → updateApprovedProductVariant
+         └─ deliveryDuration/fastDeliveryType → updateApprovedProductDelivery
+```
+
+Never use update endpoints for price or stock — use `updatePriceAndInventory` exclusively.
+
+## Attribute Format Difference
+
+**createProducts**: `{ attributeId, attributeValueId: integer|null, customAttributeValue: string|null }`
+**Update endpoints**: `{ attributeId, attributeValueIds: integer[], attributeValue: string }`
+
+Never mix. Validator flags mixing with `WRONG_ATTRIBUTE_FORMAT_FOR_CREATE` / `WRONG_ATTRIBUTE_FORMAT_FOR_UPDATE`.
+
+## TR vs GLOBAL
+
+| | TR | GLOBAL |
+|---|---|---|
+| vatRate | Enum [0, 1, 10, 20] enforced | Country-specific, not enforced |
+| storefrontCode | Always "1" | Seller-provided country code (e.g. "SA", "RO") |
+
+## Common Endpoint Mistakes
+
+| Wrong | Correct |
+|---|---|
+| `updateProduct` (V1 deprecated) | Appropriate V2 update endpoint |
+| Content/variant endpoint for price/stock | `updatePriceAndInventory` |
+| `updatePriceAndInventory` for metadata | `updateApprovedProductContent` or `updateUnapprovedProducts` |
+| `filterProducts` (doesn't exist) | `filterApprovedProducts` or `filterUnapprovedProducts` |
+| Parent category ID | Leaf (lowest-level) category ID |
+| Partial attributes in content update | ALL attributes when any attribute changes |

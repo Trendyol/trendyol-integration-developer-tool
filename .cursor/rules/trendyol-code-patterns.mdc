@@ -1,0 +1,75 @@
+---
+description: Use when implementing Trendyol API auth, async batch polling, updatePriceAndInventory deduplication, or when generating implementation code for any Trendyol module. Covers auth setup, polling pattern, retry strategy, and code quality rules.
+alwaysApply: false
+---
+
+# Trendyol Code Patterns
+
+## Auth Pattern
+
+```
+credentials = base64(apiKey + ":" + apiSecret)
+Authorization: Basic {credentials}
+X-Supplier-Id: {sellerId}           // numeric string
+storefrontCode: {storefrontCode}    // "1" for TR, country code for GLOBAL
+```
+
+For language-specific code: call `generateImplementationGuide(moduleKey, language)`.
+
+## Async Batch Pattern
+
+Every mutation endpoint is asynchronous. Response: `{ "batchRequestId": "..." }`.
+
+```
+1. Send mutation → capture batchRequestId → store it
+2. Poll getBatchRequestResult every 3-5 seconds (max 10 attempts)
+3. Stop when status == "COMPLETED"
+4. COMPLETED ≠ success — inspect items[].status
+5. Collect items where status == "FAILED" → log failureReasons
+6. Retry ONLY failed items — never retry entire batch
+7. Store full result within 4 hours (results expire)
+```
+
+For endpoint-specific strategy: `getBatchPollingStrategy(endpointKey)`.
+For language-specific polling: `generateImplementationGuide(moduleKey, language)`.
+
+## updatePriceAndInventory — 15-Minute Deduplication
+
+Same request (same barcodes, same values) cannot be sent within 15 minutes.
+
+```
+Before sending:
+  for each item:
+    lastSent = store.get(item.barcode)
+    if lastSent exists AND minutesSince < 15 AND values unchanged:
+      skip this item
+
+After sending:
+  for each sent item:
+    store.set(item.barcode, { timestamp: now(), values: {...} })
+```
+
+Changing any field value resets the window.
+
+## batchRequestType Reference
+
+| Endpoint | batchRequestType |
+|---|---|
+| createProducts | ProductV2OnBoarding |
+| updateUnapproved/Content/Variant/Delivery | ProductV2Update |
+| updatePriceAndInventory | ProductInventoryUpdate |
+| archiveProducts, unlockProducts | ProductArchiveUpdate |
+| deleteProducts | ProductDeletion |
+
+## Code Quality Checklist
+
+All generated implementation code must satisfy:
+
+- [ ] Base URL configurable (env var or config) — never hardcoded
+- [ ] Credentials from configuration — never hardcoded
+- [ ] storefrontCode configurable per marketplace
+- [ ] Batch results stored before 4-hour expiry
+- [ ] Failed items collected separately for retry
+- [ ] 15-minute deduplication implemented for updatePriceAndInventory
+- [ ] Polling handles timeout (max 10 attempts)
+- [ ] Item-level status inspected after COMPLETED
