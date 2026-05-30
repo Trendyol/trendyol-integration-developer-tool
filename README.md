@@ -1,3 +1,5 @@
+
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Trendyol/trendyol-integration-developer-tool/badge)](https://scorecard.dev/viewer/?uri=github.com/Trendyol/trendyol-integration-developer-tool)
 # Trendyol Integration Developer Tool
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
