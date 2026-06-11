@@ -1,12 +1,14 @@
 {
+  "description": "Blocks unconfirmed calls to the Trendyol production API (apigw.trendyol.com). Stage calls and all other tools are unaffected.",
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": ".*",
+        "matcher": "^(Bash|WebFetch|mcp__TrendyolDeveloperToolsMcpServer__.*)$",
         "hooks": [
           {
             "type": "command",
-            "command": "node hooks/pretool-guard.mjs"
+            "command": "node",
+            "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/pretool-guard.mjs"]
           }
         ]
       }

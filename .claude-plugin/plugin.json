@@ -6,8 +6,8 @@
     "name": "Trendyol",
     "url": "https://developers.trendyol.com"
   },
-  "homepage": "https://github.com/trendyol/trendyol-integration-developer-tool",
-  "repository": "https://github.com/trendyol/trendyol-integration-developer-tool",
+  "homepage": "https://github.com/Trendyol/trendyol-integration-developer-tool",
+  "repository": "https://github.com/Trendyol/trendyol-integration-developer-tool",
   "license": "Apache-2.0",
   "keywords": [
     "trendyol",
@@ -18,7 +18,5 @@
     "api",
     "mcp",
     "validation"
-  ],
-  "skills": "./skills/",
-  "mcpServers": "./.mcp.json"
+  ]
 }

@@ -9,16 +9,22 @@
  * Stage URL (allowed freely):      https://stageapigw.trendyol.com
  * Production URL (requires confirmation): https://apigw.trendyol.com
  *
- * Security fixes applied:
- * - matcher is ".*" — covers all tool name variants (bash_tool, run_bash, etc.)
+ * Security notes:
+ * - matcher targets only API-reaching tools (Bash, WebFetch, MCP server tools)
  * - URL detection uses regex + normalization to catch encoding bypasses
  * - reason field requires minimum 20 characters to prevent trivial bypasses
  * - MCP response content is never trusted as a source of confirmation
+ * - output uses hookSpecificOutput.permissionDecision (PreToolUse schema);
+ *   the guard never auto-approves, it only denies unconfirmed production calls
  */
 
-// Regex matches any form of the production hostname
+// Regex matches the production hostname WITHOUT also matching the stage host.
+// Stage is "stageapigw.trendyol.com" which contains "apigw.trendyol.com" as a
+// substring, so a negative lookbehind ensures "apigw" is not preceded by a
+// word char (i.e. not "...stageapigw"). A leading dot is still allowed so
+// subdomains of the production host would also be detected.
 // Handles: URL-encoded, unicode-escaped, with/without protocol, with/without trailing slash
-const PRODUCTION_HOST_REGEX = /apigw\.trendyol\.com/i;
+const PRODUCTION_HOST_REGEX = /(?<!\w)apigw\.trendyol\.com/i;
 const STAGE_URL = "https://stageapigw.trendyol.com";
 const PRODUCTION_URL = "https://apigw.trendyol.com";
 const REASON_MIN_LENGTH = 20;
@@ -55,7 +61,7 @@ process.stdin.on("end", () => {
         const isProductionTargetingTool = checkForProductionTarget(toolName, toolInput);
 
         if (!isProductionTargetingTool) {
-            allow();
+            passThrough();
             return;
         }
 
@@ -102,7 +108,7 @@ process.stdin.on("end", () => {
             return;
         }
 
-        allow();
+        passThrough();
 
     } catch (error) {
         deny(
@@ -181,12 +187,22 @@ function containsProductionHost(str) {
     return PRODUCTION_HOST_REGEX.test(normalizeUnicode(str));
 }
 
-function allow() {
-    process.stdout.write(JSON.stringify({ decision: "allow" }));
+function passThrough() {
+    // Exit 0 with no JSON → normal permission flow proceeds.
+    // The guard never auto-approves (never bypasses the permission system);
+    // it only ever DENIES unconfirmed production calls.
     process.exit(0);
 }
 
-function deny(message) {
-    process.stdout.write(JSON.stringify({ decision: "deny", message }));
+function deny(reason) {
+    process.stdout.write(
+        JSON.stringify({
+            hookSpecificOutput: {
+                hookEventName: "PreToolUse",
+                permissionDecision: "deny",
+                permissionDecisionReason: reason,
+            },
+        })
+    );
     process.exit(0);
 }
